@@ -25,7 +25,7 @@ func main() {
 	rawNotificationSchedule := getInputFromStdin()
 	cleanedNotificationSchedule := cleanNotificationSchedule(rawNotificationSchedule)
 	validateNotificationSchedule(cleanedNotificationSchedule)
-	insertNotificationSchedule(database, cleanedNotificationSchedule)
+	createNotificationSchedule(database, cleanedNotificationSchedule)
 }
 
 func getDatabase() *sql.DB {
@@ -89,7 +89,7 @@ func validateNotificationSchedule(notification notificationSchedule) {
 	}
 }
 
-func insertNotificationSchedule(database *sql.DB, notification notificationSchedule) {
+func createNotificationSchedule(database *sql.DB, notification notificationSchedule) {
 	insertNotificationScheduleSQL := `INSERT INTO notification_schedule(created_on, title, body, datetime) VALUES (datetime('now'), ?, ?, ?)`
 
 	statement, err := database.Prepare(insertNotificationScheduleSQL)
@@ -105,6 +105,8 @@ func insertNotificationSchedule(database *sql.DB, notification notificationSched
 	if err != nil {
 		log.Fatalln("Error: Could not insert notification.")
 	}
+
+	log.Println("Notification schedule created.")
 }
 
 func createNotificationScheduleTable(database *sql.DB) {
