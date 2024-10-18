@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-type notification struct {
+type notificationSchedule struct {
 	title    string
 	body     string
 	datetime string
@@ -22,29 +22,29 @@ func main() {
 	defer database.Close()
 	setupDatabase(database)
 
-	rawNotificationInput := getInputFromStdin()
-	notificationInput := cleanNotificationInput(rawNotificationInput)
-	checkNotificationInputs(notificationInput)
-	insertNotification(database, notificationInput)
+	rawNotificationSchedule := getInputFromStdin()
+	cleanedNotificationSchedule := cleanNotificationSchedule(rawNotificationSchedule)
+	validateNotificationSchedule(cleanedNotificationSchedule)
+	insertNotificationSchedule(database, cleanedNotificationSchedule)
 }
 
 func getDatabase() *sql.DB {
-	const fileName = "sqlite.db"
+	const NOTIFICATION_SCHEDULE_DB = "notification_schedule.db"
 
-	db, err := sql.Open("sqlite3", fileName)
+	db, err := sql.Open("sqlite3", NOTIFICATION_SCHEDULE_DB)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln("Error: Could not open database.")
 	}
 
 	return db
 }
 
 func setupDatabase(database *sql.DB) {
-	createNotificationTable(database)
+	createNotificationScheduleTable(database)
 	log.Println("Database ready.")
 }
 
-func getInputFromStdin() notification {
+func getInputFromStdin() notificationSchedule {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter title: ")
 	title, _ := reader.ReadString('\n')
@@ -55,22 +55,22 @@ func getInputFromStdin() notification {
 	fmt.Print("Enter datetime (RFC3339): ")
 	datetime, _ := reader.ReadString('\n')
 
-	return notification{
+	return notificationSchedule{
 		title:    title,
 		body:     body,
 		datetime: datetime,
 	}
 }
 
-func cleanNotificationInput(rawNotification notification) notification {
-	return notification{
-		title:    strings.TrimSpace(rawNotification.title),
-		body:     strings.TrimSpace(rawNotification.body),
-		datetime: strings.TrimSpace(rawNotification.datetime),
+func cleanNotificationSchedule(rawNotificationSchedule notificationSchedule) notificationSchedule {
+	return notificationSchedule{
+		title:    strings.TrimSpace(rawNotificationSchedule.title),
+		body:     strings.TrimSpace(rawNotificationSchedule.body),
+		datetime: strings.TrimSpace(rawNotificationSchedule.datetime),
 	}
 }
 
-func checkNotificationInputs(notification notification) {
+func validateNotificationSchedule(notification notificationSchedule) {
 	if len(notification.title) == 0 {
 		log.Fatalln("Error: Title is required.")
 	}
@@ -89,9 +89,10 @@ func checkNotificationInputs(notification notification) {
 	}
 }
 
-func insertNotification(database *sql.DB, notification notification) {
-	insertNotificationSQL := `INSERT INTO notification(created_on, title, body, datetime) VALUES (datetime('now'), ?, ?, ?)`
-	statement, err := database.Prepare(insertNotificationSQL)
+func insertNotificationSchedule(database *sql.DB, notification notificationSchedule) {
+	insertNotificationScheduleSQL := `INSERT INTO notification_schedule(created_on, title, body, datetime) VALUES (datetime('now'), ?, ?, ?)`
+
+	statement, err := database.Prepare(insertNotificationScheduleSQL)
 	if err != nil {
 		log.Fatalln("Error: Could not prepare insert statement.")
 	}
@@ -106,8 +107,8 @@ func insertNotification(database *sql.DB, notification notification) {
 	}
 }
 
-func createNotificationTable(database *sql.DB) {
-	createNotificationTableSQL := `CREATE TABLE IF NOT EXISTS notification (
+func createNotificationScheduleTable(database *sql.DB) {
+	createNotificationScheduleTableSQL := `CREATE TABLE IF NOT EXISTS notification_schedule (
 		"id" integer NOT NULL PRIMARY KEY AUTOINCREMENT,		
 		"created_on" TEXT NOT NULL,
 		"title" TEXT NOT NULL,
@@ -115,7 +116,7 @@ func createNotificationTable(database *sql.DB) {
 		"datetime" TEXT NOT NULL
 	  );`
 
-	statement, err := database.Prepare(createNotificationTableSQL)
+	statement, err := database.Prepare(createNotificationScheduleTableSQL)
 	if err != nil {
 		log.Fatalln("Error: Could not prepare create table statement.")
 	}

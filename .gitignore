@@ -1,2 +1,2 @@
-sqlite.db
-notification
+*.db
+notification-scheduler

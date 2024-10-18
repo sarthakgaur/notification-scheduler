@@ -1,4 +1,4 @@
-module notification
+module notification-scheduler
 
 go 1.22.7
 
