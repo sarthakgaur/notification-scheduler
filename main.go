@@ -103,7 +103,7 @@ func createNotificationSchedule(database *sql.DB, notification notificationSched
 
 	_, err = statement.Exec(title, body, datetime)
 	if err != nil {
-		log.Fatalln("Error: Could not insert notification.")
+		log.Fatalln("Error: Could not insert notification schedule.")
 	}
 
 	log.Println("Notification schedule created.")
