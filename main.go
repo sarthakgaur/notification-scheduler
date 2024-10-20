@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"database/sql"
+	"flag"
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
@@ -17,15 +18,38 @@ type notificationSchedule struct {
 	datetime string
 }
 
+type commandLineArguments struct {
+	mode     string
+	input    string
+	title    string
+	body     string
+	datetime string
+}
+
 func main() {
+	cliArguments := getCommandLineArguments()
 	database := getDatabase()
 	defer database.Close()
 	setupDatabase(database)
+	executeProgramMode(cliArguments, database)
+}
 
-	rawNotificationSchedule := getInputFromStdin()
-	cleanedNotificationSchedule := cleanNotificationSchedule(rawNotificationSchedule)
-	validateNotificationSchedule(cleanedNotificationSchedule)
-	createNotificationSchedule(database, cleanedNotificationSchedule)
+func getCommandLineArguments() commandLineArguments {
+	mode := flag.String("mode", "schedule", `Mode of the program. Options: ["schedule", "daemon"]`)
+	input := flag.String("input", "stdin", `Mode of input. Options: ["stdin", "cli"]`)
+	title := flag.String("title", "", "Title of the notification")
+	body := flag.String("body", "", "Body of the notification")
+	datetime := flag.String("datetime", "", "Datetime of the notification in RFC3339 format")
+
+	flag.Parse()
+
+	return commandLineArguments{
+		mode:     *mode,
+		input:    *input,
+		title:    *title,
+		body:     *body,
+		datetime: *datetime,
+	}
 }
 
 func getDatabase() *sql.DB {
@@ -44,6 +68,39 @@ func setupDatabase(database *sql.DB) {
 	log.Println("Database ready.")
 }
 
+func executeProgramMode(cliArguments commandLineArguments, database *sql.DB) {
+	switch cliArguments.mode {
+	case "daemon":
+		executeDaemonMode()
+	case "schedule":
+		executeScheduleMode(cliArguments, database)
+	default:
+		executeScheduleMode(cliArguments, database)
+	}
+}
+
+func executeDaemonMode() {
+	log.Println("Daemon mode not implemented.")
+}
+
+func executeScheduleMode(cliArguments commandLineArguments, database *sql.DB) {
+	rawNotificationSchedule := getUserInput(cliArguments)
+	cleanedNotificationSchedule := cleanNotificationSchedule(rawNotificationSchedule)
+	validateNotificationSchedule(cleanedNotificationSchedule)
+	createNotificationSchedule(database, cleanedNotificationSchedule)
+}
+
+func getUserInput(cliArguments commandLineArguments) notificationSchedule {
+	switch cliArguments.input {
+	case "stdin":
+		return getInputFromStdin()
+	case "cli":
+		return getInputFromCommandLine(cliArguments)
+	default:
+		return getInputFromStdin()
+	}
+}
+
 func getInputFromStdin() notificationSchedule {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter title: ")
@@ -59,6 +116,14 @@ func getInputFromStdin() notificationSchedule {
 		title:    title,
 		body:     body,
 		datetime: datetime,
+	}
+}
+
+func getInputFromCommandLine(cliArguments commandLineArguments) notificationSchedule {
+	return notificationSchedule{
+		title:    cliArguments.title,
+		body:     cliArguments.body,
+		datetime: cliArguments.datetime,
 	}
 }
 
