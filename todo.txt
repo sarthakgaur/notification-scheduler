@@ -1,0 +1,2 @@
+1. Use cobra for command line argument parsing. https://github.com/spf13/cobra
+2. Schedule notification using rrule-go. https://github.com/teambition/rrule-go
