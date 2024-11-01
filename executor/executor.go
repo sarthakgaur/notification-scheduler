@@ -19,7 +19,6 @@ type notificationSchedule struct {
 }
 
 func Execute(cliArguments types.CommandLineArguments) {
-	fmt.Println("Executing program with arguments:", cliArguments)
 	database := getDatabase()
 	defer database.Close()
 	setupDatabase(database)
